@@ -68,6 +68,8 @@
   .card.dragging { opacity: .4; }
   .card .name { font-size: 14.5px; font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px; }
   .card .when { font-size: 11.5px; font-weight: 400; color: var(--muted); white-space: nowrap; }
+  .card .tag.convite { color: var(--ink); background: transparent; border: 1px solid var(--line); margin-right: 4px; }
+  .card .tag.convite.muito { border-color: var(--ink); font-weight: 600; }
   .card .tag { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 500; color: var(--ink-2); background: var(--tag); border: 0; border-radius: 20px; padding: 2px 9px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .card .line { font-size: 12.5px; color: var(--ink-2); line-height: 1.65; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -158,6 +160,7 @@
   const KEY = 'sb_publishable_yFxha4btvFg2bftRPaPhTA_kZgUNhAV';
   const STORE = 'tg-painel-sessao';
   const CAL_URL = 'https://cal.com/kayoan-felipe-guadagnini-owjodt/30min';
+  const CONVITE_URL = 'https://convite.ogrupo.com.br/?c=';
   const COLS = [
     ['nova', 'Novas aplicações'],
     ['conversa', 'Em conversa'],
@@ -232,7 +235,7 @@
   function showLogin() { $('#app').classList.remove('on'); $('#login').classList.add('on'); }
 
   async function load() {
-    rows = await api('aplicacoes?select=*&order=created_at.desc');
+    rows = await api('aplicacoes?select=*,convites(token,criado_em,expira_em,aberto_em,ultima_abertura,aberturas)&order=created_at.desc&convites.order=criado_em.desc');
     render();
   }
 
@@ -256,6 +259,16 @@
     if (days < 7) return days <= 1 ? 'ontem' : `${days} dias`;
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
   };
+  // Convite mais recente da pessoa e o texto do selo
+  const conviteDe = r => (r.convites && r.convites[0]) || null;
+  const dataHora = iso => { const d = new Date(iso); return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`; };
+  const seloConvite = r => {
+    const c = conviteDe(r);
+    if (!c) return '';
+    if (c.aberto_em) return `Abriu em ${dataHora(c.aberto_em)}`;
+    if (new Date(c.expira_em) <= new Date()) return 'Convite vencido';
+    return 'Convite enviado';
+  };
   const phone = w => {
     const m = /^\+55(\d{2})(\d{4,5})(\d{4})$/.exec(w);
     return m ? `(${m[1]}) ${m[2]}-${m[3]}` : w;
@@ -272,6 +285,8 @@
             <div class="line">${esc(r.email)}</div>
             <div class="line">${esc(phone(r.whatsapp))}</div>
             ${r.canal === 'indicacao' ? `<div class="tag">Indicação de ${esc(r.indicado_por || 'membro')}</div>` : ''}
+            ${seloConvite(r) ? `<div class="tag convite">${esc(seloConvite(r))}</div>` : ''}
+            ${(conviteDe(r)?.aberturas || 0) > 1 ? `<div class="tag convite${conviteDe(r).aberturas > 2 ? ' muito' : ''}">Abriu ${conviteDe(r).aberturas} vezes</div>` : ''}
           </button>`).join('') : '<div class="empty">Nada por aqui</div>'}</div>
       </section>`;
     }).join('');
@@ -316,9 +331,12 @@
     cal.searchParams.set('email', r.email);
     cal.searchParams.set('attendeePhoneNumber', r.whatsapp);
     cal.searchParams.set('instagram', '@' + r.instagram);
-    const convite = `Oi, ${r.nome.split(' ')[0]}. Aqui é o Kayoan, do The Group. Vi a sua aplicação e quero conversar com você. Escolha o melhor horário por aqui: ${cal.toString()}`;
+    const chamada = `Oi, ${r.nome.split(' ')[0]}. Aqui é o Kayoan, do The Group. Escolha o melhor horário para a nossa conversa por aqui: ${cal.toString()}`;
+    const c = conviteDe(r);
+    const vale = c && new Date(c.expira_em) > new Date();
     $('#d-quick').innerHTML = `
-      <a class="primary" href="https://wa.me/${wa}?text=${encodeURIComponent(convite)}" target="_blank" rel="noopener">Chamar para a call</a>
+      <a class="primary" href="#" id="d-convite">${vale ? 'Reenviar convite' : 'Enviar convite'}</a>
+      <a href="https://wa.me/${wa}?text=${encodeURIComponent(chamada)}" target="_blank" rel="noopener">Link do Cal</a>
       <a href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>
       <a href="https://instagram.com/${encodeURIComponent(r.instagram)}" target="_blank" rel="noopener">Instagram</a>
       <a href="mailto:${esc(r.email)}">E-mail</a>`;
@@ -332,11 +350,33 @@
       ['WhatsApp', `<a href="https://wa.me/${wa}" target="_blank" rel="noopener">${esc(phone(r.whatsapp))}</a>`, true],
       ['E-mail', `<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`, true],
       ['Veio pelo', r.origem === 'app' ? 'App' : r.origem === 'site' ? 'Site' : 'Outro'],
+      ['Convite', !c ? 'Não enviado' : (seloConvite(r) + (c.aberturas > 1 ? ` · ${c.aberturas} vezes` : '') + (vale ? ` · vale até ${new Date(c.expira_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}` : ''))],
     ];
     $('#d-list').innerHTML = items.map(([k, v, html]) => `<div class="row"><dt>${k}</dt><dd>${html ? v : esc(v)}</dd></div>`).join('');
     $('#d-moves').innerHTML = COLS.map(([k, l]) => `<button class="move${r.status === k ? ' cur' : ''}" data-to="${k}">${l}</button>`).join('');
     if (document.activeElement !== $('#d-nota')) $('#d-nota').value = r.nota || '';
   }
+  // Enviar convite: abre a janela antes (senão o celular bloqueia), cria ou reaproveita o token e manda pelo WhatsApp.
+  $('#d-quick').addEventListener('click', async e => {
+    if (!e.target.closest('#d-convite')) return;
+    e.preventDefault();
+    const r = rows.find(x => x.id === openId); if (!r) return;
+    const w = window.open('', '_blank');
+    try {
+      const j = await api('rpc/criar_convite', { method: 'POST', body: JSON.stringify({ p_aplicacao: r.id }), headers: { Prefer: 'return=representation' } });
+      const link = CONVITE_URL + j.token;
+      const msg = `Oi, ${r.nome.split(' ')[0]}. Aqui é o Kayoan, do The Group. Seu convite está aqui: ${link}`;
+      const url = `https://wa.me/${r.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+      if (w) w.location.href = url; else location.href = url;
+      toast(j.reaproveitado ? 'Mesmo convite, reenviado' : 'Convite criado');
+      await load();
+    } catch (err) {
+      if (w) w.close();
+      toast(err.message === 'auth' ? 'Entre de novo' : 'Não foi possível criar o convite');
+      if (err.message === 'auth') showLogin();
+    }
+  });
+
   $('#d-moves').addEventListener('click', e => { const b = e.target.closest('.move'); if (b && openId) move(openId, b.dataset.to); });
 
   let notaT;
