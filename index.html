@@ -127,6 +127,12 @@
   }
   .input span + input { padding-left: 2px; }
   .input input::placeholder { color: var(--placeholder); }
+  .pais { position: relative; display: flex; align-items: center; gap: 4px; padding: 0 4px 0 18px; font-size: 16px; color: var(--ink); white-space: nowrap; flex: none; }
+  .pais::after { content: ''; width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-2px); margin: 0 8px 0 4px; }
+  .input .pais span { padding-left: 0; color: var(--ink); }
+  .pais select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+  .input .ddi { flex: none; width: 74px; padding-left: 6px; padding-right: 4px; border-right: 1px solid var(--line); }
+  .input .ddi[hidden] { display: none; }
   .err { color: var(--error); font-size: 12.5px; margin-top: 6px; min-height: 0; display: none; }
   .err.on { display: block; }
   .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
@@ -272,7 +278,28 @@
       </div>
       <div>
         <label for="wa">WhatsApp</label>
-        <div class="input"><input id="wa" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-0000" maxlength="22"></div>
+        <div class="input">
+          <label class="pais" id="pais-label" aria-label="País"><span id="pais-cod">+55</span>
+            <select id="pais" aria-label="País do WhatsApp">
+              <option value="55" selected>Brasil (+55)</option>
+              <option value="351">Portugal (+351)</option>
+              <option value="1">Estados Unidos e Canadá (+1)</option>
+              <option value="595">Paraguai (+595)</option>
+              <option value="54">Argentina (+54)</option>
+              <option value="598">Uruguai (+598)</option>
+              <option value="56">Chile (+56)</option>
+              <option value="57">Colômbia (+57)</option>
+              <option value="52">México (+52)</option>
+              <option value="34">Espanha (+34)</option>
+              <option value="44">Reino Unido (+44)</option>
+              <option value="353">Irlanda (+353)</option>
+              <option value="971">Emirados Árabes (+971)</option>
+              <option value="outro">Outro país</option>
+            </select>
+          </label>
+          <input id="ddi" class="ddi" type="tel" inputmode="numeric" placeholder="+ código" maxlength="5" hidden aria-label="Código do país">
+          <input id="wa" name="tel" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(11) 99999-0000" maxlength="22">
+        </div>
         <div class="err" id="e-wa">Confira o número, com DDD.</div>
       </div>
       <div>
@@ -403,37 +430,60 @@
     $('#' + id).closest('.input').classList.remove('bad'); $('#e-' + id).classList.remove('on');
   }));
 
-  // WhatsApp: máscara brasileira quando o número não começa com +
-  const wa = $('#wa');
-  wa.addEventListener('input', () => {
-    const v = wa.value;
-    if (v.trim().startsWith('+')) return;
-    const d = v.replace(/\D/g, '').slice(0, 11);
+  // WhatsApp: país (Brasil por padrão) + número. No Brasil, máscara e o 9 depois do DDD.
+  const wa = $('#wa'), pais = $('#pais'), ddi = $('#ddi');
+  const ehBrasil = () => pais.value === '55';
+  const mascaraBR = () => {
+    let d = wa.value.replace(/\D/g, '');
+    if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+    d = d.slice(0, 11);
     let out = d;
     if (d.length > 2) out = `(${d.slice(0, 2)}) ${d.slice(2)}`;
     if (d.length > 7) out = `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
     wa.value = out;
+  };
+  wa.addEventListener('input', () => { if (ehBrasil()) mascaraBR(); });
+  pais.addEventListener('change', () => {
+    const outro = pais.value === 'outro';
+    $('#pais-cod').textContent = outro ? 'Outro' : '+' + pais.value;
+    ddi.hidden = !outro;
+    wa.placeholder = ehBrasil() ? '(11) 99999-0000' : 'Número com código de área';
+    if (ehBrasil()) mascaraBR(); else wa.value = wa.value.replace(/[^\d ]/g, '');
+    wa.closest('.input').classList.remove('bad'); $('#e-wa').classList.remove('on');
+    (outro ? ddi : wa).focus();
   });
+  ddi.addEventListener('input', () => { ddi.value = '+' + ddi.value.replace(/\D/g, '').slice(0, 4); if (ddi.value === '+') ddi.value = ''; wa.closest('.input').classList.remove('bad'); $('#e-wa').classList.remove('on'); });
 
   const cleanIg = v => v.trim().toLowerCase()
     .replace(/^.*instagram\.com\//, '').replace(/^@/, '').replace(/[/?\s].*$/, '');
-  const cleanWa = v => {
-    const t = v.trim();
-    const d = t.replace(/\D/g, '');
-    if (t.startsWith('+')) return '+' + d;
-    if (d.length === 10 || d.length === 11) return '+55' + d;
-    return d.length >= 12 ? '+' + d : d;
+  // Devolve { whats } pronto para gravar, ou { erro } com o texto do aviso.
+  const lerWa = () => {
+    let d = wa.value.replace(/\D/g, '');
+    if (ehBrasil()) {
+      if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+      if (d.length === 10 || (d.length === 11 && d[2] !== '9')) return { erro: 'Número incorreto: falta o 9 depois do DDD.' };
+      if (d.length !== 11) return { erro: 'Confira o número, com DDD.' };
+      return { whats: '+55' + d };
+    }
+    const cod = pais.value === 'outro' ? ddi.value.replace(/\D/g, '') : pais.value;
+    if (!cod) return { erro: 'Escreva o código do país.' };
+    if (d.startsWith(cod) && d.length > cod.length + 6) d = d.slice(cod.length);
+    d = d.replace(/^0+/, '');
+    const total = cod.length + d.length;
+    if (d.length < 6 || total < 10 || total > 15) return { erro: 'Confira o número, com código de área.' };
+    return { whats: '+' + cod + d };
   };
 
   function check() {
     const nome = $('#nome').value.trim().replace(/\s+/g, ' ');
     const ig = cleanIg($('#ig').value);
-    const whats = cleanWa(wa.value);
+    const w = lerWa(), whats = w.whats;
+    if (w.erro) $('#e-wa').textContent = w.erro;
     const email = $('#email').value.trim().toLowerCase();
     const bad = {
       nome: nome.length < 2,
       ig: !/^[a-z0-9._]{1,30}$/.test(ig),
-      wa: !/^\+[0-9]{11,15}$/.test(whats),
+      wa: !!w.erro,
       email: !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email),
     };
     for (const [k, id] of [['nome', 'nome'], ['ig', 'ig'], ['wa', 'wa'], ['email', 'email']]) {
