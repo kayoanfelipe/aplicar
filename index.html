@@ -200,6 +200,20 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
     </div>
   </section>
 
+  <!-- 1b -->
+  <section class="step" data-step="1b" data-n="1">
+    <h1>Qual é o seu segmento hoje?</h1>
+    <p class="sub">Em poucas palavras.</p>
+    <form class="fields textstep" data-field="segmento" novalidate>
+      <div>
+        <div class="input"><input id="segmento" placeholder="Ex.: drop, e-commerce, lançamento" maxlength="80" autocomplete="off"></div>
+        <div class="err" id="e-segmento">Escreva pelo menos duas letras.</div>
+      </div>
+      <div class="actions" style="margin-top:8px"><button class="btn" type="submit">Continuar</button></div>
+    </form>
+    <button class="backlink" data-back>Voltar</button>
+  </section>
+
   <!-- 2 -->
   <section class="step" data-step="2" data-n="2">
     <h1>Qual é a sua função hoje?</h1>
@@ -344,16 +358,6 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
     </div>
   </section>
 
-  <!-- Recusa: ainda não atua -->
-  <section class="step end" data-step="no-dr">
-    <h1>Obrigado pelo interesse.</h1>
-    <p class="sub">O The Group reúne quem já vive a resposta direta no dia a dia. Quando esse for o seu caso, vai ser um prazer receber a sua aplicação.</p>
-    <div class="actions" style="margin-top:4px">
-      <a class="btn ghost" href="https://ogrupo.com.br">Voltar ao site</a>
-    </div>
-    <button class="backlink" data-back>Voltar</button>
-  </section>
-
   <!-- Recusa: iniciante -->
   <section class="step end" data-step="no-rev">
     <h1>Obrigado pela sinceridade.</h1>
@@ -415,7 +419,7 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
       answers[q] = v;
       opt.parentElement.querySelectorAll('.opt').forEach(o => o.classList.toggle('picked', o === opt));
       setTimeout(() => {
-        if (q === 'atua') go(v === 'sim' ? '2' : 'no-dr');
+        if (q === 'atua') go(v === 'sim' ? '2' : '1b');
         else if (q === 'funcao') go(v === 'outra' ? '2b' : '3');
         else if (q === 'nicho') go('4');
         else if (q === 'faturamento') go(v === 'inicio' ? 'no-rev' : '5');
@@ -442,9 +446,9 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
     $('#e-' + id).classList.toggle('on', bad);
     if (bad) { inp.focus(); return; }
     answers[id] = v;
-    go(id === 'funcao_outra' ? '3' : '6');
+    go(id === 'segmento' ? '2' : id === 'funcao_outra' ? '3' : '6');
   }));
-  ['funcao_outra', 'indicado_por'].forEach(id => $('#' + id).addEventListener('input', () => {
+  ['segmento', 'funcao_outra', 'indicado_por'].forEach(id => $('#' + id).addEventListener('input', () => {
     $('#' + id).closest('.input').classList.remove('bad'); $('#e-' + id).classList.remove('on');
   }));
 
@@ -544,6 +548,7 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
           p_nicho: answers.nicho, p_faturamento: answers.faturamento,
           p_canal: answers.canal, p_indicado_por: answers.canal === 'indicacao' ? answers.indicado_por : null,
           p_origem: origem,
+          p_atua_dr: answers.atua !== 'nao', p_segmento: answers.atua === 'nao' ? answers.segmento : null,
         }),
       });
       if (!res.ok) {
