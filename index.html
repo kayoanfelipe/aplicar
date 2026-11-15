@@ -162,6 +162,23 @@
 
   footer { text-align: center; color: var(--foot); font-size: 12px; font-weight: 300; padding: 0 24px max(24px, env(safe-area-inset-bottom)); }
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1908489860526169');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 <header><a class="brand" href="https://ogrupo.com.br" aria-label="The Group"><span class="logo"></span><span class="badge">Membros por convocação</span></a></header>
@@ -532,6 +549,8 @@
         const j = await res.json().catch(() => ({}));
         throw new Error(j.message && /Muitas aplica/.test(j.message) ? j.message : 'Não foi possível enviar agora. Tente de novo em instantes.');
       }
+      // Meta Pixel: só conta aplicação gravada de verdade (recusas e robôs não chegam aqui)
+      try { window.fbq && fbq('track', 'Lead', { content_name: 'Aplicação The Group', content_category: answers.faturamento || '' }); } catch (_) {}
       finish();
     } catch (ex) {
       err.textContent = ex.message && !/fetch/i.test(ex.message) ? ex.message : 'Sem conexão. Confira a internet e tente de novo.';
