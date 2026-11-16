@@ -403,7 +403,16 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
     if (input && matchMedia('(hover: hover)').matches) setTimeout(() => input.focus(), 350);
   }
 
-  function go(id) { trail.push(id); show(id); }
+  // Meta Pixel: marca só a etapa a que a pessoa chegou (nunca as respostas), uma vez por etapa,
+  // para ver onde o quiz perde gente. "no-rev" = recusa por ser iniciante. "ok" já vira Lead.
+  const etapasVistas = new Set();
+  function marcaEtapa(id) {
+    if (id === 'ok' || etapasVistas.has(id)) return;
+    etapasVistas.add(id);
+    try { window.fbq && fbq('trackCustom', 'QuizEtapa', { etapa: id }); } catch (_) {}
+  }
+
+  function go(id) { trail.push(id); show(id); marcaEtapa(id); }
   function back() {
     if (trail.length < 2) return;
     trail.pop();
@@ -411,6 +420,7 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
   }
 
   show('1');
+  marcaEtapa('1');
 
   document.addEventListener('click', e => {
     const opt = e.target.closest('.opt');
@@ -525,7 +535,8 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
     e.preventDefault();
     const err = $('#formerr'); err.classList.remove('on');
     const d = check();
-    if (d.first) { $('#' + d.first).focus(); return; }
+    if (d.first) { marcaEtapa('6-erro'); $('#' + d.first).focus(); return; }
+    marcaEtapa('6-enviando');
     const btn = $('#send');
     btn.disabled = true; btn.textContent = 'Enviando…';
 
