@@ -263,12 +263,29 @@
 <footer>The Group © 2026</footer>
 
 <script>
-(() => {
+(async () => {
   const SUPABASE_URL = 'https://kqucpivagntlmukfghhg.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_yFxha4btvFg2bftRPaPhTA_kZgUNhAV';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const main = $('main');
+
+  // A pesquisa da semana (tabela pesquisas, aberta) tem prioridade. Sem pesquisa aberta,
+  // ou se o banco não responder, a página mostra o Raio-x como antes.
+  main.style.visibility = 'hidden';
+  let atual = null;
+  try {
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 4000);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/pesquisa_atual`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY }, body: '{}', signal: ctl.signal });
+    clearTimeout(t);
+    if (res.ok) { const j = await res.json(); if (j && j.id && Array.isArray(j.perguntas) && j.perguntas.length) atual = j; }
+  } catch {}
+  if (atual) generica(atual); else raioX();
+  main.style.visibility = '';
+
+  function raioX() {
   const FEITO = 'tg-raio-x-respondido';
   const TOTAL = 5;
-  const $ = s => document.querySelector(s);
   const steps = [...document.querySelectorAll('.step')];
   const r = { trafego: null, plataformas: [], pagamento: [], conta_dolar: [], vende_fora: null };
   const trail = ['intro'];
@@ -344,6 +361,125 @@
       err.textContent = /Muitas respostas/.test(ex.message) ? ex.message : 'Não foi possível enviar. Confira a internet e toque de novo na resposta.';
       err.classList.add('on');
       r.vende_fora = null; marcar('vende_fora');
+    }
+  }
+  }
+
+  function generica(p) {
+    const FEITO = 'tg-pesquisa-' + p.id;
+    const Q = p.perguntas.filter(q => q && q.k && q.t && Array.isArray(q.op) && q.op.length);
+    const A = {};
+    const CK = '<svg class="arrow ck" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    const AR = '<svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+    // Troca as telas do Raio-x pelas da pesquisa aberta (a tela final continua a mesma).
+    document.querySelectorAll('.step:not([data-step="ok"])').forEach(s => s.remove());
+    document.title = `${p.titulo} · The Group`;
+    const ok = $('.step[data-step="ok"]');
+    const intro = `<section class="step intro on" data-step="intro">
+      <h1>${esc(p.titulo)}</h1>
+      ${p.sub ? `<p class="sub"${p.intro ? ' style="margin-bottom:14px"' : ''}>${esc(p.sub)}</p>` : ''}
+      ${p.intro ? `<p class="sub">${esc(p.intro)}</p>` : ''}
+      <div class="actions" style="margin-top:4px"><button class="btn" id="g-comecar">Responder</button></div>
+    </section>`;
+    const telas = Q.map((q, i) => `<section class="step" data-step="g${i}">
+      <h1>${esc(q.t)}</h1>
+      <p class="sub">${q.multi ? 'Pode marcar mais de uma.' : 'Escolha uma.'}${q.opcional ? ' Se preferir, pode pular.' : ''}</p>
+      <div class="options">${q.op.map(([v, l]) => q.multi
+        ? `<button class="opt multi" data-g="${i}" data-v="${esc(v)}" aria-pressed="false">${esc(l)} <span class="box">${CK}</span></button>`
+        : `<button class="opt" data-g="${i}" data-v="${esc(v)}">${esc(l)} ${AR}</button>`).join('')}</div>
+      ${q.multi ? `<div class="actions"><button class="btn" data-gnext="${i}">Continuar</button></div>` : (q.opcional ? `<div class="actions"><button class="btn ghost" data-gnext="${i}">Pular</button></div>` : '')}
+      <div class="formerr" data-gerr="${i}"></div>
+      <button class="backlink" data-gback>Voltar</button>
+    </section>`).join('');
+    ok.insertAdjacentHTML('beforebegin', intro + telas);
+    const steps = () => [...document.querySelectorAll('.step')];
+
+    // Pergunta com "se" só aparece quando a resposta da outra não está em "nao".
+    const visivel = q => !q.se || !(q.se.nao || []).includes(A[q.se.k]);
+    const visiveis = () => Q.map((q, i) => i).filter(i => visivel(Q[i]));
+    const proxima = i => { for (let j = i + 1; j < Q.length; j++) if (visivel(Q[j])) return j; return -1; };
+    const respondida = i => Q[i].multi ? (A[Q[i].k] || []).length > 0 : !!A[Q[i].k];
+    const trail = ['intro'];
+
+    function show(id, back = false) {
+      steps().forEach(s => s.classList.remove('on', 'back'));
+      const el = $(`.step[data-step="${id}"]`);
+      if (back) el.classList.add('back');
+      el.classList.add('on');
+      const pr = $('#progress');
+      if (id.startsWith('g')) {
+        const i = +id.slice(1), vis = visiveis(), n = vis.indexOf(i) + 1;
+        pr.classList.remove('hide');
+        $('#barfill').style.width = (n / vis.length * 100) + '%';
+        $('#count').textContent = `${n} de ${vis.length}`;
+        const b = el.querySelector('[data-gnext]');
+        if (b) {
+          const ultima = proxima(i) === -1;
+          if (Q[i].multi) { b.textContent = ultima ? 'Enviar' : 'Continuar'; b.disabled = !Q[i].opcional && !respondida(i); }
+          else b.textContent = ultima ? 'Pular e enviar' : 'Pular';
+        }
+      } else pr.classList.add('hide');
+      window.scrollTo(0, 0);
+    }
+    const go = id => { trail.push(id); show(id); };
+    const avancar = i => { const j = proxima(i); if (j === -1) enviar(i); else go('g' + j); };
+
+    try { if (localStorage.getItem(FEITO)) { trail.length = 0; trail.push('ok'); show('ok'); } } catch {}
+
+    $('#g-comecar').addEventListener('click', () => { const j = proxima(-1); if (j === -1) enviar(-1); else go('g' + j); });
+
+    const marcar = i => document.querySelectorAll(`.opt[data-g="${i}"]`).forEach(o => {
+      const v = A[Q[i].k], on = Array.isArray(v) ? v.includes(o.dataset.v) : v === o.dataset.v;
+      o.classList.toggle('picked', on);
+      if (o.classList.contains('multi')) o.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    main.addEventListener('click', e => {
+      const o = e.target.closest('.opt[data-g]');
+      if (o) {
+        const i = +o.dataset.g, q = Q[i], v = o.dataset.v;
+        if (q.multi) {
+          const lista = A[q.k] || [];
+          A[q.k] = lista.includes(v) ? lista.filter(x => x !== v) : [...lista, v];
+          marcar(i);
+          const b = $(`[data-gnext="${i}"]`); if (b) b.disabled = !q.opcional && !respondida(i);
+          return;
+        }
+        A[q.k] = v; marcar(i);
+        setTimeout(() => avancar(i), 220);
+        return;
+      }
+      const nx = e.target.closest('[data-gnext]');
+      if (nx && !nx.disabled) {
+        const i = +nx.dataset.gnext;
+        if (!Q[i].multi) delete A[Q[i].k];
+        avancar(i);
+        return;
+      }
+      if (e.target.closest('[data-gback]') && trail.length > 1) { trail.pop(); show(trail[trail.length - 1], true); }
+    });
+
+    async function enviar(i) {
+      const err = i >= 0 ? $(`[data-gerr="${i}"]`) : null;
+      if (err) err.classList.remove('on');
+      const respostas = {};
+      visiveis().forEach(j => { const v = A[Q[j].k]; if (Array.isArray(v) ? v.length : v) respostas[Q[j].k] = v; });
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/responder_pesquisa`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+          body: JSON.stringify({ p_pesquisa: p.id, p_respostas: respostas }),
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || '');
+        try { localStorage.setItem(FEITO, '1'); } catch {}
+        trail.length = 0; trail.push('ok'); show('ok');
+      } catch (ex) {
+        const m = ex.message || '';
+        const txt = /^(Responda:|Opção inválida|Esta pesquisa já foi encerrada|Muitas respostas)/.test(m) ? m : 'Não foi possível enviar. Confira a internet e tente de novo.';
+        if (err) { err.textContent = txt; err.classList.add('on'); } else alert(txt);
+        if (i >= 0 && !Q[i].multi) { delete A[Q[i].k]; marcar(i); }
+      }
     }
   }
 })();
