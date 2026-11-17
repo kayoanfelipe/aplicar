@@ -403,13 +403,23 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
     if (input && matchMedia('(hover: hover)').matches) setTimeout(() => input.focus(), 350);
   }
 
-  // Meta Pixel: marca só a etapa a que a pessoa chegou (nunca as respostas), uma vez por etapa,
-  // para ver onde o quiz perde gente. "no-rev" = recusa por ser iniciante. "ok" já vira Lead.
+  // Meta Pixel: um evento com NOME próprio por etapa (a Meta apaga parâmetros personalizados
+  // nesta conta, mas mostra cada nome de evento com a sua contagem). Nunca manda respostas.
+  // Uma vez por etapa por visita. "ok" já vira Lead.
+  const NOME_ETAPA = {
+    '1': 'Quiz1_Abriu', '1b': 'Quiz1b_Segmento',
+    '2': 'Quiz2_Funcao', '2b': 'Quiz2b_FuncaoOutra',
+    '3': 'Quiz3_Mercado', '4': 'Quiz4_Faturamento', 'no-rev': 'Quiz4_RecusadoIniciante',
+    '5': 'Quiz5_Canal', '5b': 'Quiz5b_Indicacao',
+    '6': 'Quiz6_Contato', '6-erro': 'Quiz6_CamposInvalidos',
+    '6-enviando': 'Quiz6_Enviando', '6-falha': 'Quiz6_FalhaEnvio',
+  };
   const etapasVistas = new Set();
   function marcaEtapa(id) {
-    if (id === 'ok' || etapasVistas.has(id)) return;
+    const nome = NOME_ETAPA[id];
+    if (!nome || etapasVistas.has(id)) return;
     etapasVistas.add(id);
-    try { window.fbq && fbq('trackCustom', 'QuizEtapa', { etapa: id }); } catch (_) {}
+    try { window.fbq && fbq('trackCustom', nome); } catch (_) {}
   }
 
   function go(id) { trail.push(id); show(id); marcaEtapa(id); }
@@ -570,6 +580,7 @@ src="https://www.facebook.com/tr?id=1908489860526169&ev=PageView&noscript=1"
       try { window.fbq && fbq('track', 'Lead', { content_name: 'Aplicação The Group', content_category: answers.faturamento || '' }); } catch (_) {}
       finish();
     } catch (ex) {
+      marcaEtapa('6-falha');
       err.textContent = ex.message && !/fetch/i.test(ex.message) ? ex.message : 'Sem conexão. Confira a internet e tente de novo.';
       err.classList.add('on');
     } finally {
