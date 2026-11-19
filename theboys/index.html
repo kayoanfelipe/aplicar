@@ -15,7 +15,7 @@
 :root{--ink:#f2f2f0;--ink-2:#b9b9b4;--muted:#7d7d78;--gold:#d2ad6e;--bg:#0a0a0a}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Fustat,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+body{margin:0;overflow:hidden;touch-action:manipulation;background:var(--bg);color:var(--ink);font-family:Fustat,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 
 /* ===== fundo: parede de tijolos + seda + grão, tudo em movimento lento ===== */
@@ -42,7 +42,7 @@ body.revealing .bg .flash{animation:flash 2.4s ease-out .9s}
 .bg .silk.a{transition:opacity 1.5s}
 body.revealing .bg .silk.a{opacity:1;filter:grayscale(.3) brightness(1.3)}
 
-.app{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;
+.app{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;touch-action:manipulation;
   padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom))}
 
 /* topo: marca aparece depois da revelação */
@@ -60,9 +60,9 @@ body.named .top{opacity:1;transform:none}
 .msg{margin:0;font-weight:300;font-size:clamp(23px,6.2vw,33px);line-height:1.42;letter-spacing:-.005em;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.6)}
 .msg .c{opacity:0;transition:opacity .12s linear}
 .msg .c.on{opacity:1}
-.msg.slow .c{opacity:0;filter:blur(6px);display:inline-block;transform:translateY(6px);transition:opacity .5s ease,filter .5s ease,transform .5s ease}
-.msg.slow .c.on{opacity:1;filter:blur(0);transform:none}
-.msg.slow .c.sp{display:inline;filter:none;transform:none}
+.msg.slow .c{opacity:0;display:inline-block;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
+.msg.slow .c.on{opacity:1;transform:none}
+.msg.slow .c.sp{display:inline;transform:none}
 .msg .g{color:var(--gold);font-weight:500}
 .msg .e{font-weight:700}
 .msg.hl{font-weight:700;font-size:clamp(30px,8.4vw,48px);line-height:1.18;letter-spacing:-.02em}
