@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Boys by The Group</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fustat:wght@300..800&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="logo-the-boys.webp">
+<style>
+:root{--ink:#f2f2f0;--ink-2:#b9b9b4;--muted:#7d7d78;--gold:#d2ad6e;--bg:#0a0a0a}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Fustat,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+
+/* ===== fundo: parede de tijolos + seda + grão, tudo em movimento lento ===== */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#171717}
+.bg .bricks{position:absolute;inset:-60px;background:url("tijolos.webp") center/1080px repeat;
+  filter:brightness(1.5) contrast(1.15);animation:wall 60s ease-in-out infinite alternate}
+@keyframes wall{to{transform:translate3d(-30px,-24px,0) scale(1.04)}}
+.bg .silk{position:absolute;left:-30%;top:-30%;width:160%;height:160%;background:url("seda.webp") center/cover no-repeat;
+  mix-blend-mode:screen;opacity:.85;filter:grayscale(.6);will-change:transform,opacity}
+.bg .silk.a{animation:silkA 26s ease-in-out infinite alternate}
+@keyframes silkA{0%{transform:translate3d(-4%,-3%,0) rotate(-6deg) scale(1)}100%{transform:translate3d(5%,4%,0) rotate(5deg) scale(1.15)}}
+.bg .sweep{position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.055) 48%,rgba(255,255,255,.0) 58%);
+  animation:sweep 9s cubic-bezier(.45,0,.2,1) infinite}
+@keyframes sweep{0%{transform:translateX(-70%)}60%,100%{transform:translateX(70%)}}
+.bg .grain{position:absolute;inset:-100px;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain .9s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-30px,20px)}40%{transform:translate(25px,-35px)}60%{transform:translate(-15px,40px)}80%{transform:translate(35px,10px)}100%{transform:translate(0,0)}}
+.bg .vignette{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 45%,transparent 45%,rgba(0,0,0,.4) 80%,rgba(0,0,0,.75) 100%)}
+/* pulso de luz na revelação */
+.bg .flash{position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 46%,rgba(255,255,255,.22),transparent 70%);opacity:0}
+body.revealing .bg .flash{animation:flash 2.4s ease-out .9s}
+@keyframes flash{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+.bg .silk.a{transition:opacity 1.5s}
+body.revealing .bg .silk.a{opacity:1;filter:grayscale(.3) brightness(1.3)}
+
+.app{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;
+  padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom))}
+
+/* topo: marca aparece depois da revelação */
+.top{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;opacity:0;transform:translateY(-6px);transition:opacity .8s,transform .8s}
+body.named .top{opacity:1;transform:none}
+.top img{height:46px;width:auto;display:block}
+.top span{font-size:11px;font-style:italic;font-weight:400;color:var(--ink-2);letter-spacing:.02em;margin-top:-2px}
+
+/* palco */
+.stage{flex:1;min-height:0;width:100%;max-width:660px;display:flex;align-items:center;justify-content:center;text-align:center;
+  transition:opacity .32s ease,transform .32s ease,filter .32s ease}
+.stage.out{opacity:0;transform:translateY(-12px);filter:blur(4px)}
+.stage.pre{opacity:0;transform:translateY(12px)}
+
+.msg{margin:0;font-weight:300;font-size:clamp(23px,6.2vw,33px);line-height:1.42;letter-spacing:-.005em;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+.msg .c{opacity:0;transition:opacity .12s linear}
+.msg .c.on{opacity:1}
+.msg.slow .c{opacity:0;filter:blur(6px);display:inline-block;transform:translateY(6px);transition:opacity .5s ease,filter .5s ease,transform .5s ease}
+.msg.slow .c.on{opacity:1;filter:blur(0);transform:none}
+.msg.slow .c.sp{display:inline;filter:none;transform:none}
+.msg .g{color:var(--gold);font-weight:500}
+.msg .e{font-weight:700}
+.msg.hl{font-weight:700;font-size:clamp(30px,8.4vw,48px);line-height:1.18;letter-spacing:-.02em}
+.msg.hl .e{font-weight:800}
+
+/* revelação: o logo é "pintado com spray" na parede */
+.reveal{display:flex;flex-direction:column;align-items:center;width:100%}
+.reveal .logo{position:relative;width:min(80vw,470px);aspect-ratio:1540/904}
+.reveal .logo img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.reveal .logo .paint{opacity:0;filter:blur(18px);transform:scale(1.12);
+  -webkit-mask-image:linear-gradient(100deg,#000 45%,transparent 55%);mask-image:linear-gradient(100deg,#000 45%,transparent 55%);
+  -webkit-mask-size:300% 100%;mask-size:300% 100%;-webkit-mask-position:100% 0;mask-position:100% 0;
+  animation:spray 1.5s cubic-bezier(.3,.6,.2,1) .35s forwards,settle 1s ease-out 1.6s forwards}
+@keyframes spray{0%{opacity:1;-webkit-mask-position:100% 0;mask-position:100% 0;filter:blur(10px);transform:scale(1.08)}
+  100%{opacity:1;-webkit-mask-position:0 0;mask-position:0 0;filter:blur(3px);transform:scale(1.02)}}
+@keyframes settle{0%{opacity:1;filter:blur(3px);transform:scale(1.02)}30%{opacity:.75}45%{opacity:1}100%{opacity:1;filter:blur(0);transform:scale(1);-webkit-mask-position:0 0;mask-position:0 0}}
+.reveal .logo .mist{opacity:0;filter:blur(26px);transform:scale(1.18);animation:mist 2.4s ease-out .4s forwards}
+@keyframes mist{0%{opacity:0}35%{opacity:.55}100%{opacity:0;transform:scale(1.3)}}
+.reveal .by{margin-top:6px;font-size:clamp(20px,5.6vw,30px);font-style:italic;font-weight:400;letter-spacing:.01em;color:var(--ink);
+  opacity:0;transform:translateY(10px);animation:up .9s ease 2.3s forwards}
+@keyframes up{to{opacity:1;transform:none}}
+.app.shake{animation:shake .38s linear 1}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-3px,2px)}40%{transform:translate(3px,-2px)}60%{transform:translate(-2px,-1px)}80%{transform:translate(2px,1px)}}
+.reveal.done .paint,.reveal.done .by{animation:none;opacity:1;filter:none;transform:none;-webkit-mask-image:none;mask-image:none}
+.reveal.done .mist{display:none}
+
+/* botão final */
+.cta{display:flex;flex-direction:column;align-items:center;gap:20px;cursor:default;width:100%}
+.cta .mark{display:flex;flex-direction:column;align-items:center}
+.cta .mark img{width:min(62vw,300px);height:auto;display:block}
+.cta .mark span{font-size:clamp(17px,4.6vw,22px);font-style:italic;color:var(--ink);margin-top:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;width:min(100%,360px);padding:18px 20px;border-radius:999px;border:0;cursor:pointer;margin-top:10px;white-space:nowrap;
+  background:#f2f2f0;color:#0a0a0a;font:600 15.5px Fustat,sans-serif;letter-spacing:.01em;box-shadow:0 0 0 0 rgba(255,255,255,.35);
+  animation:pulse 2.4s ease-out infinite;transition:transform .2s ease}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.35)}70%,100%{box-shadow:0 0 0 18px rgba(255,255,255,0)}}
+.btn:active{transform:scale(.98)}
+@media (hover:hover){.btn:hover{transform:translateY(-1px)}}
+.btn:focus{outline:none}.btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.soon{min-height:22px;margin:0;font-size:13.5px;color:var(--ink-2);opacity:0;transition:opacity .4s}
+.soon.show{opacity:1}
+.again{background:none;border:0;padding:6px;font:400 12px Fustat,sans-serif;color:var(--muted);letter-spacing:.06em;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+
+/* perguntas de curadoria */
+.ask{display:flex;flex-direction:column;align-items:center;width:100%;max-width:440px;cursor:default}
+.opts{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:28px;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .45s ease,transform .45s ease}
+.opts.show{opacity:1;transform:none;pointer-events:auto}
+.opt{width:100%;padding:15px 18px;border-radius:14px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.05);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:var(--ink);font:500 16.5px Fustat,sans-serif;cursor:pointer;transition:background .2s,color .2s,border-color .2s,transform .15s}
+.opt:active{transform:scale(.98)}
+@media (hover:hover){.opt:hover{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.1)}}
+.opt.sel{background:#f2f2f0;color:#0a0a0a;border-color:#f2f2f0}
+.opts.open{gap:14px;align-items:center}
+.opts.open textarea{width:100%;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.35);color:var(--ink);
+  font:400 16px Fustat,sans-serif;line-height:1.45;resize:none;outline:none;user-select:text;-webkit-user-select:text;transition:border-color .2s}
+.opts.open textarea::placeholder{color:#76766f}
+.opts.open textarea:focus{border-color:rgba(255,255,255,.75)}
+.opts.open .btn{margin-top:0}
+.btn:disabled{opacity:.35;cursor:default;animation:none}
+.opt:focus{outline:none}.opt:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* formulário final */
+body.onform .foot .next{display:none}
+body.onform .top{display:none}
+.form{width:100%;max-width:420px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;cursor:default;text-align:left;
+  display:flex;flex-direction:column;gap:10px;padding:4px 2px 8px;margin:auto 0;user-select:text;-webkit-user-select:text}
+.form .flogo{width:104px;height:auto;align-self:center;margin-bottom:0}
+.form h2{margin:0 0 6px;text-align:center;font-weight:700;font-size:clamp(24px,6.6vw,32px);line-height:1.15;letter-spacing:-.02em}
+.form label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.form label small{font-size:11px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400}
+.form input,.form textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);
+  color:var(--ink);font:400 16px Fustat,sans-serif;letter-spacing:0;text-transform:none;outline:none;transition:border-color .2s,background .2s;resize:vertical}
+.form input::placeholder,.form textarea::placeholder{color:#6f6f6a}
+.form input:focus,.form textarea:focus{border-color:rgba(255,255,255,.75);background:rgba(0,0,0,.5)}
+.form .bad{border-color:#e39a9a}
+.ferr{margin:0;min-height:18px;font-size:13px;color:#e8a7a7;text-align:center}
+.form .btn{align-self:center;margin-top:2px}
+.cta .thx{margin:0;max-width:340px;font-size:17px;line-height:1.5;color:var(--ink-2)}
+.cta .msg.hl{font-size:clamp(28px,7.6vw,40px)}
+
+/* rodapé: aviso de continuar + barra */
+.foot{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.next{height:20px;display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.06em;color:var(--muted);opacity:0;transition:opacity .35s}
+.next.show{opacity:1}
+.next svg{width:12px;height:12px;stroke:var(--ink-2);fill:none;stroke-width:1.6;animation:bob 1.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+.bar{width:100%;height:3px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9a9a96,#fff);border-radius:3px;box-shadow:0 0 10px rgba(255,255,255,.5);transition:width .9s cubic-bezier(.25,.8,.25,1)}
+
+@media (max-height:600px){.msg{font-size:clamp(18px,4.6vw,24px)}.msg.hl{font-size:clamp(24px,6vw,32px)}}
+@media (prefers-reduced-motion:reduce){
+  .bg *{animation:none!important}
+  .stage,.msg .c,.bar i,.top{transition-duration:.01s!important}
+  .reveal .paint,.reveal .by{animation:none!important;opacity:1!important;filter:none!important;transform:none!important;-webkit-mask-image:none!important;mask-image:none!important}
+  .reveal .mist{display:none}
+  .next svg,.btn{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="bricks"></div>
+  <div class="silk a"></div>
+  <div class="sweep"></div>
+  <div class="flash"></div>
+  <div class="grain"></div>
+  <div class="vignette"></div>
+</div>
+
+<main class="app" id="app">
+  <header class="top">
+    <img src="logo-the-boys.webp" alt="The Boys by the group">
+  </header>
+
+  <section class="stage pre" id="stage" aria-live="polite"></section>
+
+  <div class="foot">
+    <div class="next" id="next"><span id="nextTxt">toque para continuar</span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg></div>
+    <div class="bar" role="progressbar" aria-label="Progresso" aria-valuemin="0" aria-valuemax="100"><i id="fill"></i></div>
+  </div>
+</main>
+
+<script>
+/*
+  ROTEIRO (fonte: cofre, "TSL interativa do The Boys - roteiro v1", seção "O roteiro").
+  Marcações dentro do texto:
+    {g:texto}  dourado
+    {e:texto}  destaque em negrito
+    ^          pausa na digitação
+  hl: true    tela inteira em destaque (itálico grande)
+  w: true     aparece palavra por palavra, mais devagar (frases de emoção)
+  "..."       as reticências aparecem ponto a ponto, devagar
+  {ask:...}   pergunta de curadoria com opções (reply = resposta curta opcional)
+  {form:true} formulário final da aplicação
+*/
+const S = [
+  // Ato 1: o gancho
+  {t:"O cara que fatura 8 dígitos não vai responder o seu direct.", hl:true, w:true},
+  {t:"Mas todo mundo te disse para fazer network com os grandes do mercado."},
+  {t:"Ir no evento de 5 mil pessoas..."},
+  {t:"Pegar fila para tirar foto..."},
+  {t:"Quantas dessas conexões abriram alguma porta para você?"},
+  {t:"Para mim...^ {e:nenhuma.}", w:true},
+  // A vida de quem lê (dores a validar com a fala real dos membros)
+  {t:"E enquanto isso, você segue tocando a operação sozinho."},
+  {t:"Quando uma campanha trava, não tem para quem ligar."},
+  {t:"Em casa, ninguém entende direito o que você faz."},
+  {t:"E nos grupos que você entra, quase todo mundo ainda está começando..."},
+  {t:"Eu sei bem como é."},
+  // Ato 2: a história
+  {t:"Eu sou o Kayoan."},
+  {t:"Fiquei 6 anos no mercado batendo cabeça."},
+  {t:"Tentei de tudo: afiliado, drop, e-commerce, day trade, prestação de serviço...", w:true},
+  {t:"E nada dava certo."},
+  {t:"Eu não conseguia fazer nem R$ 5 mil por mês."},
+  {t:"Até que, com 18 anos, eu estava devendo {g:R$ 20 mil} para o banco.", hl:true},
+  {t:"Enquanto a galera da minha idade comprava o primeiro carro."},
+  {t:"Em dezembro de 2024, eu parei."},
+  {t:"E decidi: o ano seguinte ia ser sobre conexão."},
+  {t:"Só que do jeito que ninguém ensina por aí..."},
+  {t:"Em 2 ou 3 meses...^ eu já tinha colocado {g:R$ 100 mil} no bolso.", hl:true},
+  {t:"Depois, a gente foi escalando, e hoje já fizemos alguns milhões."},
+  {t:"De lucro.", hl:true, w:true},
+  {t:"E a conexão que mudou tudo não veio de evento lotado."},
+  {t:"Veio de uma conversa com o Diogo Gomes."},
+  {t:"Em 2019, o Diogo trabalhava num supermercado, ganhando R$ 700 por mês."},
+  {t:"E eu estava no chão de fábrica, numa empresa de móveis, de carteira assinada, ganhando R$ 1.800."},
+  {t:"A gente não era ninguém.", hl:true, w:true},
+  {t:"Ele me passou um pack de VSLs."},
+  {t:"Eu transformei aquilo numa oferta, e quem comprava ganhava um grupo de bônus."},
+  {t:"Esse grupo...^ virou o {e:The Group.}", w:true},
+  {t:"E lá dentro surgiram as parcerias e os negócios que me trouxeram até aqui."},
+  {t:"Hoje, o The Group reúne os profissionais com as operações mais lucrativas do país."},
+  {t:"Juntos, eles somam {g:mais de R$ 6 bilhões} em receita.", w:true},
+  // Ato 3: a tese
+  {t:"E foi lá dentro que eu entendi por que funcionou."},
+  {t:"Conexão de verdade é troca."},
+  {t:"E troca acontece entre quem está no mesmo nível."},
+  {t:"Os grandes de hoje não se conectaram com os grandes da época deles."},
+  {t:"Eles se conectaram uns com os outros quando ainda eram pequenos..."},
+  {t:"E cresceram juntos.", hl:true, w:true},
+  {t:"Steve Jobs e Steve Wozniak se conheceram por um amigo em comum, em 1971."},
+  {t:"Nenhum dos dois era ninguém."},
+  {t:"No começo dos anos 2000, Peter Thiel, Elon Musk, Reid Hoffman e os fundadores do YouTube trabalhavam juntos numa empresa pequena: o PayPal."},
+  {t:"Depois, cada um foi construir ou financiar Tesla, LinkedIn e YouTube."},
+  {t:"O cara que vai faturar 8 dígitos daqui a alguns anos está no seu nível hoje."},
+  {t:"E ele responde o seu direct.", hl:true, w:true},
+  {t:"Porque quando um de vocês crescer, vai lembrar quem estava do lado."},
+  {t:"E vai puxar o outro para cima."},
+  // Ato 4: o mecanismo
+  {t:"Só que conexão assim pede movimento."},
+  {t:"Estar sempre no mesmo lugar que as pessoas certas."},
+  {t:"E você não acha esse lugar rolando o feed."},
+  {t:"A maioria dos grupos de mercado é um amontoado: iniciante, curioso, vendedor de curso..."},
+  {t:"Ninguém no seu nível."},
+  {t:"Foi isso que a gente resolveu."},
+  // Ato 5: a revelação
+  {reveal:true},
+  {t:"A nova geração do The Group."},
+  {t:"Os caras que estão subindo agora."},
+  {t:"Para entrar, não precisa ter feito milhões."},
+  {t:"Mas você precisa já ter colocado a mão na massa nesse mercado."},
+  {t:"Ter quebrado a cara algumas vezes, como eu quebrei no começo..."},
+  {t:"É isso que deixa alguém {e:maduro} no mercado.", hl:true},
+  {ask:"E você? O que tem feito nesse mercado?", key:"o_que_tem_feito", open:true,
+    placeholder:"Conta do seu jeito: o que você já vendeu, testou, errou e acertou."},
+  {t:"Depois, você passa pela nossa curadoria."},
+  {t:"A gente olha seu perfil, seu comportamento e seu momento."},
+  {t:"Curioso não entra.", w:true},
+  {t:"Porque o valor de um grupo é quem está do seu lado.", hl:true},
+  // Ato 6: o que tem dentro (a porta do The Group primeiro)
+  {t:"E quando você estiver faturando múltiplos 6 dígitos por mês, com consistência...^ {g:pode aplicar para o The Group.}"},
+  {t:"Até lá, você vai ter..."},
+  {t:"Acesso ao aplicativo do The Group."},
+  {t:"Lá dentro, você entra no grupo do The Boys, com gente do seu nível, correndo atrás das mesmas coisas que você."},
+  {t:"O resto do aplicativo continua fechado, só para os membros do The Group."},
+  {t:"E todo mês, um membro do The Group entra no grupo do The Boys para ensinar vocês."},
+  {t:"Funil, oferta, tráfego, copy...^ o que vocês precisarem.", w:true},
+  {t:"E tem o The House: o encontro principal do The Group."},
+  {t:"Os que mais evoluíram no The Boys são chamados para estar lá...^ no meio da galera do The Group.", hl:true},
+  {ask:"Antes de falar de valor: o que você mais quer agora?", key:"o_que_mais_quer",
+    opts:["Escalar a minha operação", "Achar sócios e parcerias", "Ter gente do meu nível do lado", "Chegar no The Group"]},
+  // Ato 7: o preço
+  {t:"Hoje, quem está no The Group investe R$ 30 mil por ano."},
+  {t:"Você não vai pagar isso.", w:true},
+  {t:"Nem metade.", w:true, hl:true},
+  {t:"Nem a metade da metade.", w:true, hl:true},
+  {t:"Tem mentoria cobrando R$ 15 mil para te largar sozinho depois."},
+  {t:"Eu poderia cobrar R$ 3 mil pelo ano no The Boys..."},
+  {t:"E ainda seria pouco perto do valor de uma conexão certa."},
+  {t:"Mas a gente está abrindo agora."},
+  {t:"Quem entra agora paga...^ {g:R$ 997 no ano.}", w:true},
+  {t:"Depois da abertura, o valor passa para R$ 2.997."},
+  {t:"À vista ou parcelado."},
+  {t:"Do jeito que funcionar para você."},
+  {t:"Se você se conectar com as pessoas certas, isso pode te poupar anos de mercado."},
+  {t:"Eu perdi seis.", w:true, hl:true},
+  // Ato 8: a ação
+  {t:"Eu tomei a minha decisão num dezembro."},
+  {t:"A sua pode ser agora...", hl:true},
+  {t:"O próximo passo é a sua aplicação."},
+  {t:"E você já respondeu quase tudo no caminho."},
+  {t:"A gente analisa e, se você for aprovado, o convite chega no seu WhatsApp."},
+  {form:true}
+];
+
+const REVEAL = S.findIndex(s => s.reveal);
+const stage = document.getElementById('stage');
+const fill = document.getElementById('fill');
+const next = document.getElementById('next');
+const nextTxt = document.getElementById('nextTxt');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let idx = 0, typing = false, timer = null, chars = [], busy = false, revealTimer = null, revealShake = null;
+let replyShown = false;            // resposta curta depois de uma pergunta
+const answers = {};                // respostas da curadoria, vão junto com a aplicação
+
+/* Barra: rápida no começo, desacelera no fim (ease-out). */
+function setProgress(i){
+  const x = i / (S.length - 1);
+  const p = i === S.length - 1 ? 1 : 1 - Math.pow(1 - x, 1.8);
+  fill.style.width = (p * 100).toFixed(2) + '%';
+  fill.parentElement.setAttribute('aria-valuenow', Math.round(p * 100));
+}
+
+function parse(t){
+  const out = []; let cls = '';
+  for (let i = 0; i < t.length; i++){
+    const c = t[i];
+    if (c === '{' && t[i+2] === ':'){ cls = t[i+1]; i += 2; continue; }
+    if (c === '}' && cls){ cls = ''; continue; }
+    if (c === '^'){ out.push({pause:true}); continue; }
+    out.push({ch:c, cls});
+  }
+  return out;
+}
+
+function delayFor(ch, nextCh){
+  if (ch === '.' && nextCh === '.') return 420;   // reticências: ponto a ponto
+  if ('.?!'.includes(ch)) return 300;
+  if (',:;'.includes(ch)) return 130;
+  return 27;
+}
+
+function renderText(s, parent){
+  const p = document.createElement('p');
+  p.className = 'msg' + (s.hl ? ' hl' : '') + (s.w ? ' slow' : '');
+  const items = parse(s.t);
+  chars = [];
+  const seq = [];
+  // agrupa por palavra para o navegador nunca quebrar no meio de uma palavra
+  let word = null;
+  items.forEach(it => {
+    if (it.pause){ seq.push({pause:true}); return; }
+    if (it.ch === ' '){ word = null; const sp = document.createElement('span'); sp.className = 'c sp'; sp.textContent = ' '; p.appendChild(sp); chars.push(sp); seq.push({el:sp, ch:' '}); return; }
+    if (!word){ word = document.createElement('span'); word.style.whiteSpace = 'nowrap'; p.appendChild(word); }
+    const sp = document.createElement('span');
+    sp.className = 'c' + (it.cls ? ' ' + it.cls : '');
+    sp.textContent = it.ch;
+    word.appendChild(sp); chars.push(sp); seq.push({el:sp, ch:it.ch});
+  });
+  (parent || stage).appendChild(p);
+  return seq;
+}
+
+function type(seq, byWord){
+  typing = true; next.classList.remove('show');
+  if (reduced){ finish(); return; }
+  let k = 0;
+  const step = () => {
+    if (k >= seq.length){ done(); return; }
+    const it = seq[k++];
+    if (it.pause){ timer = setTimeout(step, 800); return; }
+    if (byWord){
+      // mostra a palavra inteira; reticências saem ponto a ponto
+      let last = it; it.el.classList.add('on');
+      while (k < seq.length){
+        const n = seq[k];
+        if (n.pause || n.ch === ' ') break;
+        if (n.ch === '.' && (last.ch === '.' || (seq[k+1] && seq[k+1].ch === '.'))) break;
+        n.el.classList.add('on'); last = n; k++;
+      }
+      let nx = seq[k] && seq[k].ch;
+      if (nx === ' '){ seq[k].el.classList.add('on'); k++; nx = ' '; }
+      const d = last.ch === '.' && nx === '.' ? 420 : ('.?!'.includes(last.ch) ? 520 : (',:;'.includes(last.ch) ? 420 : 300));
+      timer = setTimeout(step, d);
+      return;
+    }
+    it.el.classList.add('on');
+    timer = setTimeout(step, delayFor(it.ch, seq[k] && seq[k].ch));
+  };
+  timer = setTimeout(step, byWord ? 420 : 280);
+}
+
+function finish(){
+  clearTimeout(timer);
+  chars.forEach(c => c.classList.add('on'));
+  done();
+}
+function done(){
+  typing = false;
+  const s = S[idx];
+  if (s && s.ask && !replyShown){
+    const o = stage.querySelector('.opts'); if (o) o.classList.add('show');
+    next.classList.remove('show');
+    return;
+  }
+  nextTxt.textContent = idx === 0 ? 'toque para continuar' : '';
+  if (s && !s.form) next.classList.add('show');
+}
+
+function renderReveal(){
+  document.body.classList.remove('revealing'); void document.body.offsetWidth;
+  document.body.classList.add('revealing');
+  const box = document.createElement('div');
+  box.className = 'reveal';
+  box.innerHTML = '<div class="logo" role="img" aria-label="The Boys">' +
+    '<img class="mist" src="logo-the-boys.webp" alt="">' +
+    '<img class="paint" src="logo-the-boys.webp" alt="">' +
+    '</div>';
+  stage.appendChild(box);
+  typing = true; next.classList.remove('show');
+  if (!reduced){
+    const app = document.getElementById('app');
+    revealShake = setTimeout(() => { app.classList.remove('shake'); void app.offsetWidth; app.classList.add('shake'); }, 1550);
+  }
+  revealTimer = setTimeout(() => { typing = false; nextTxt.textContent = ''; next.classList.add('show'); }, reduced ? 50 : 3200);
+}
+
+/* Pergunta de curadoria: a pessoa escolhe uma opção para seguir. Ninguém é recusado aqui. */
+function renderAsk(s){
+  const box = document.createElement('div');
+  box.className = 'ask';
+  const seq = renderText({t:s.ask}, box);
+  const opts = document.createElement('div');
+  opts.className = 'opts';
+  if (s.open){
+    opts.classList.add('open');
+    opts.innerHTML = `<textarea rows="4" placeholder="${s.placeholder || ''}"></textarea><button class="btn" type="button" disabled>Continuar</button>`;
+    const ta = opts.querySelector('textarea'), bt = opts.querySelector('button');
+    ta.value = answers[s.key] || '';
+    bt.disabled = ta.value.trim().length < 3;
+    opts.addEventListener('click', e => e.stopPropagation());
+    ta.addEventListener('input', () => { bt.disabled = ta.value.trim().length < 3; });
+    bt.addEventListener('click', e => {
+      e.stopPropagation();
+      if (busy || bt.disabled) return;
+      answers[s.key] = ta.value.trim();
+      ta.blur();
+      go(idx + 1);
+    });
+    box.appendChild(opts);
+    stage.appendChild(box);
+    type(seq, false);
+    return;
+  }
+  s.opts.forEach(label => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.textContent = label;
+    if (answers[s.key] === label) b.classList.add('sel');
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      if (busy) return;
+      answers[s.key] = label;
+      opts.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === b));
+      setTimeout(() => {
+        if (s.reply && s.reply[label]) showReply(s.reply[label]);
+        else go(idx + 1);
+      }, 260);
+    });
+    opts.appendChild(b);
+  });
+  box.appendChild(opts);
+  stage.appendChild(box);
+  type(seq, false);
+}
+
+function transition(fn){
+  busy = true;
+  stage.classList.add('out');
+  setTimeout(() => {
+    fn();
+    stage.classList.remove('out'); stage.classList.add('pre');
+    void stage.offsetWidth;
+    setTimeout(() => { stage.classList.remove('pre'); busy = false; }, 30);
+  }, reduced ? 10 : 320);
+}
+
+function showReply(text){
+  transition(() => {
+    clearTimeout(timer);
+    stage.innerHTML = '';
+    replyShown = true;
+    type(renderText({t:text}), false);
+  });
+}
+
+/* Formulário final: as respostas do caminho + os dados de contato viram uma aplicação. */
+function renderForm(){
+  const box = document.createElement('form');
+  box.className = 'form'; box.noValidate = true;
+  box.innerHTML = `
+    <img class="flogo" src="logo-the-boys.webp" alt="The Boys by the group">
+    <h2>Falta só saber quem é você.</h2>
+    <label>Nome<input name="nome" autocomplete="name" required></label>
+    <label>WhatsApp<input name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-9999" required></label>
+    <label>E-mail<input name="email" type="email" inputmode="email" autocomplete="email" required></label>
+    <label>Instagram<input name="instagram" autocapitalize="off" autocorrect="off" placeholder="@seuperfil" required></label>
+    <p class="ferr" id="ferr" role="alert"></p>
+    <button class="btn" type="submit">Enviar minha aplicação</button>`;
+  box.addEventListener('click', e => e.stopPropagation());
+  box.addEventListener('submit', e => {
+    e.preventDefault();
+    const f = new FormData(box);
+    const v = k => (f.get(k) || '').toString().trim();
+    const zap = v('whatsapp').replace(/\D/g, '');
+    let ig = v('instagram').replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/\/.*$/, '');
+    const err = box.querySelector('#ferr');
+    box.querySelectorAll('.bad').forEach(x => x.classList.remove('bad'));
+    const bad = [];
+    if (v('nome').length < 2) bad.push('nome');
+    if (zap.length < 10) bad.push('whatsapp');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('email'))) bad.push('email');
+    if (!ig) bad.push('instagram');
+    if (bad.length){
+      bad.forEach(n => box.querySelector(`[name="${n}"]`).classList.add('bad'));
+      err.textContent = 'Confere os campos marcados.';
+      box.querySelector(`[name="${bad[0]}"]`).focus();
+      return;
+    }
+    const aplicacao = {
+      produto: 'The Boys',
+      origem: 'tsl-interativa',
+      nome: v('nome'), whatsapp: zap, email: v('email').toLowerCase(), instagram: '@' + ig,
+      respostas: {...answers},
+      enviado_em: new Date().toISOString()
+    };
+    // PROTÓTIPO: por enquanto a aplicação fica só neste navegador.
+    // Próximo passo: gravar na tabela de aplicações da central (precisa do OK do Kayoan).
+    try {
+      const k = 'theboys_aplicacoes';
+      const list = JSON.parse(localStorage.getItem(k) || '[]'); list.push(aplicacao);
+      localStorage.setItem(k, JSON.stringify(list));
+    } catch(_){}
+    window.ultimaAplicacao = aplicacao;
+    transition(renderThanks);
+  });
+  stage.appendChild(box);
+  typing = false; next.classList.remove('show');
+}
+
+function renderThanks(){
+  clearTimeout(timer);
+  stage.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'cta';
+  box.innerHTML = `
+    <div class="mark"><img src="logo-the-boys.webp" alt="The Boys by the group"></div>
+    <p class="msg hl">Aplicação enviada.</p>
+    <p class="thx">A gente analisa e, se você for aprovado, o convite chega no seu WhatsApp.</p>
+    <button class="again" id="again" type="button">ver de novo</button>`;
+  box.querySelector('#again').addEventListener('click', e => { e.stopPropagation(); go(0); });
+  box.addEventListener('click', e => e.stopPropagation());
+  stage.appendChild(box);
+  document.body.classList.add('sent');
+}
+
+function render(i){
+  idx = i;
+  replyShown = false;
+  clearTimeout(timer); clearTimeout(revealTimer); clearTimeout(revealShake);
+  stage.innerHTML = '';
+  document.body.classList.remove('sent');
+  const s = S[i];
+  if (!s.reveal) document.body.classList.remove('revealing');
+  document.body.classList.toggle('named', i > REVEAL && !s.form);
+  document.body.classList.toggle('onform', !!s.form);
+  setProgress(i);
+  if (s.reveal) renderReveal();
+  else if (s.ask) renderAsk(s);
+  else if (s.form) renderForm();
+  else type(renderText(s), !!s.w);
+}
+
+function go(i){
+  if (busy || i < 0 || i >= S.length) return;
+  transition(() => render(i));
+}
+
+function advance(){
+  if (busy) return;
+  const s = S[idx];
+  if (s.form) return;
+  if (typing){
+    if (s.reveal){ clearTimeout(revealTimer); stage.querySelector('.reveal').classList.add('done'); typing = false; next.classList.add('show'); return; }
+    finish(); return;
+  }
+  if (s.ask && !replyShown) return;   // precisa escolher uma opção
+  go(idx + 1);
+}
+
+document.getElementById('app').addEventListener('click', advance);
+document.addEventListener('keydown', e => {
+  if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return;
+  if ([' ', 'Enter', 'ArrowRight', 'ArrowDown'].includes(e.key)){ e.preventDefault(); advance(); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp'){ e.preventDefault(); if (!busy) go(idx - 1); }
+});
+
+/* Para teste: ?tela=50 abre direto numa tela (numeração a partir de 1). */
+const start = Math.max(0, Math.min(S.length - 1, (parseInt(new URLSearchParams(location.search).get('tela'), 10) || 1) - 1));
+
+(document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]) : Promise.resolve())
+  .then(() => {
+    render(start);
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('pre')));
+  });
+</script>
+</body>
+</html>
