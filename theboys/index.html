@@ -540,18 +540,36 @@ function renderForm(){
       respostas: {...answers},
       enviado_em: new Date().toISOString()
     };
-    // PROTÓTIPO: por enquanto a aplicação fica só neste navegador.
-    // Próximo passo: gravar na tabela de aplicações da central (precisa do OK do Kayoan).
-    try {
-      const k = 'theboys_aplicacoes';
-      const list = JSON.parse(localStorage.getItem(k) || '[]'); list.push(aplicacao);
-      localStorage.setItem(k, JSON.stringify(list));
-    } catch(_){}
     window.ultimaAplicacao = aplicacao;
-    transition(renderThanks);
+    // Grava em public.theboys_aplicacoes (central › Formulários › The Boys), função aplicar_theboys.
+    const btn = box.querySelector('button[type="submit"]');
+    btn.disabled = true; btn.textContent = 'Enviando...'; err.textContent = '';
+    enviarAplicacao(aplicacao).then(r => {
+      if (r.ok){ transition(renderThanks); return; }
+      err.textContent = r.message;
+      btn.disabled = false; btn.textContent = 'Enviar minha aplicação';
+    });
   });
   stage.appendChild(box);
   typing = false; next.classList.remove('show');
+}
+
+const SUPABASE_URL = 'https://kqucpivagntlmukfghhg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_yFxha4btvFg2bftRPaPhTA_kZgUNhAV';   // chave pública (a mesma do quiz)
+async function enviarAplicacao(p){
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/aplicar_theboys`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+      body: JSON.stringify({ p })
+    });
+    if (res.ok) return { ok: true };
+    let msg = '';
+    try { msg = (await res.json()).message || ''; } catch(_){}
+    return { ok: false, message: msg || 'Não deu para enviar agora. Tenta de novo em instantes.' };
+  } catch(_){
+    return { ok: false, message: 'Sem conexão. Confere a internet e tenta de novo.' };
+  }
 }
 
 function renderThanks(){
